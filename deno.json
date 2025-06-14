@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["dom", "dom.iterable", "deno.ns", "deno.unstable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
+  },
+  "tasks": {
+    "client-watch-build": "deno run --check --watch=client --allow-read --allow-run --allow-write ./build.ts",
+    "start-watch-server": "deno run --check --allow-net=:8000 ./server/main.tsx"
+  },
+  "imports": {
+    "@std/encoding": "jsr:@std/encoding@^1.0.10",
+    "hono": "npm:hono@^4.7.11"
+  }
+}

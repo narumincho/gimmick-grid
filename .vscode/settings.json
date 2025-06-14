@@ -1,0 +1,9 @@
+{
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "denoland.vscode-deno",
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "deno.enable": true
+}
