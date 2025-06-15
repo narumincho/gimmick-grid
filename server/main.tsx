@@ -11,7 +11,9 @@ app.get("/", (c) => {
         <title>gimmick grid</title>
         <script type="module" src={`/${dist.clientCodeHash}`} />
       </head>
-      <App />
+      <body style={{ margin: 0, display: "grid", justifyContent: "center" }}>
+        <App />
+      </body>
     </html>,
   );
 });

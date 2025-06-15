@@ -9,7 +9,7 @@
   },
   "tasks": {
     "client-watch-build": "deno run --check --watch=client --allow-read --allow-run --allow-write ./build.ts",
-    "start-watch-server": "deno run --check --allow-net=:8000 ./server/main.tsx"
+    "start-watch-server": "deno run --check --watch --allow-net=:8000 ./server/main.tsx"
   },
   "imports": {
     "@std/encoding": "jsr:@std/encoding@^1.0.10",

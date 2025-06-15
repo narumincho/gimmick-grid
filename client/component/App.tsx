@@ -1,23 +1,524 @@
-import { useState } from "hono/jsx";
+import { Grid } from "./Grid.tsx";
+import type { Item } from "../grid.ts";
+
+const initialItems: ReadonlyArray<Item> = [
+  // floor 0
+  {
+    floor: 0,
+    type: "player",
+    x: 1,
+    y: 1,
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 2,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 3,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 4,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 5,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 4,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 6,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 3,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 6,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 3,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 5,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 6,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 3,
+    y: 4,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 6,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 5,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 6,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 1,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 2,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 3,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 4,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 0,
+    type: "wall",
+    x: 5,
+    y: 6,
+    direction: "horizontal",
+  },
+  // floor 1
+  {
+    floor: 1,
+    type: "player",
+    x: 1,
+    y: 1,
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 1,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 2,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 4,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 5,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 1,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 6,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 1,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 2,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 4,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 6,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 3,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 6,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 2,
+    y: 4,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 1,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 4,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 6,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 3,
+    y: 5,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 5,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 6,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 1,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 2,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 3,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 4,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 1,
+    type: "wall",
+    x: 5,
+    y: 6,
+    direction: "horizontal",
+  },
+  // floor 2
+  {
+    floor: 2,
+    type: "player",
+    x: 1,
+    y: 1,
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 2,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 3,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 4,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 5,
+    y: 1,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 6,
+    y: 1,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 6,
+    y: 2,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 6,
+    y: 3,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 6,
+    y: 4,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 6,
+    y: 5,
+    direction: "vertical",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 1,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 2,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 3,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 4,
+    y: 6,
+    direction: "horizontal",
+  },
+  {
+    floor: 2,
+    type: "wall",
+    x: 5,
+    y: 6,
+    direction: "horizontal",
+  },
+];
 
 export const App = () => {
-  const [value, setValue] = useState(0);
   return (
-    <html>
-      <head>
-      </head>
-      <body>
-        最初の表示: {value}
-
-        <button
-          type="button"
-          onClick={() => {
-            setValue((prev) => prev + 1);
-          }}
-        >
-          +
-        </button>
-      </body>
-    </html>
+    <div style={{ height: "100%", padding: 16, boxSizing: "border-box" }}>
+      <Grid width={7} height={6} floorSize={3} items={initialItems} />
+    </div>
   );
 };
