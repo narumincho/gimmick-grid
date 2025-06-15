@@ -1,3 +1,4 @@
+import { FC, JSX } from "hono/jsx";
 import type { Item } from "../grid.ts";
 
 const floorGap = 2;
@@ -75,7 +76,7 @@ export const Floor = (
   );
 };
 
-const Item = ({ item }: { readonly item: Item }) => {
+const Item: FC<{ readonly item: Item }> = ({ item }) => {
   switch (item.type) {
     case "player":
       return <circle cx={item.x + 0.5} cy={item.y + 0.5} r={0.4} />;
@@ -105,6 +106,11 @@ const Item = ({ item }: { readonly item: Item }) => {
             />
           );
       }
+      item.direction satisfies never;
+      break;
+    }
+    case "ice": {
+      return <rect x={item.x} y={item.y} width={1} height={1} fill="skyblue" />;
     }
   }
 };

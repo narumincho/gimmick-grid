@@ -5,6 +5,14 @@ import { useState } from "hono/jsx";
 
 const initialItems: ReadonlyArray<Item> = [
   // floor 0
+  ...Array.from({ length: 5 }).flatMap((_, x) =>
+    Array.from({ length: 5 }).map((_, y): Item => ({
+      floor: 0,
+      type: "ice",
+      x: 1 + x,
+      y: 1 + y,
+    }))
+  ),
   {
     floor: 0,
     type: "player",

@@ -1,4 +1,13 @@
-export type Item = Player | {
+export type Item = Player | Wall | Ice;
+
+export type Player = {
+  readonly type: "player";
+  readonly x: number;
+  readonly y: number;
+  readonly floor: number;
+};
+
+export type Wall = {
   readonly type: "wall";
   readonly x: number;
   readonly y: number;
@@ -6,8 +15,8 @@ export type Item = Player | {
   readonly floor: number;
 };
 
-export type Player = {
-  readonly type: "player";
+export type Ice = {
+  readonly type: "ice";
   readonly x: number;
   readonly y: number;
   readonly floor: number;
@@ -22,19 +31,66 @@ export const move = (
   const newItems = [...items];
   for (const [playerIndex, player] of items.entries()) {
     if (player.type !== "player") continue;
-    newItems[playerIndex] = movePlayer(newItems, direction, player);
+    const movedPlayer = walkPlayer(newItems, direction, player);
+    newItems[playerIndex] = movedPlayer;
   }
   return newItems;
 };
 
-const movePlayer = (
+const walkPlayer = (
   items: ReadonlyArray<Item>,
   direction: Direction,
   player: Player,
-): Item => {
+): Player => {
   if (checkWall(items, player.x, player.y, player.floor, direction)) {
     return player;
   }
+  let movedPlayer = movePlayer(direction, player);
+  for (let i = 0; i < 999; i++) {
+    if (
+      isOnIce({
+        items,
+        x: movedPlayer.x,
+        y: movedPlayer.y,
+        floor: movedPlayer.floor,
+      })
+    ) {
+      if (
+        checkWall(
+          items,
+          movedPlayer.x,
+          movedPlayer.y,
+          movedPlayer.floor,
+          direction,
+        )
+      ) {
+        return movedPlayer;
+      }
+      movedPlayer = movePlayer(direction, movedPlayer);
+    } else {
+      return movedPlayer;
+    }
+  }
+  throw new Error("無限ループエラー");
+};
+
+const isOnIce = (
+  { items, x, y, floor }: {
+    items: ReadonlyArray<Item>;
+    x: number;
+    y: number;
+    floor: number;
+  },
+): boolean => {
+  return items.some((item) =>
+    item.type === "ice" && item.x === x && item.y === y && item.floor === floor
+  );
+};
+
+const movePlayer = (
+  direction: Direction,
+  player: Player,
+): Player => {
   switch (direction) {
     case "up":
       return { ...player, y: player.y - 1 };
