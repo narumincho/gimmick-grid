@@ -3,10 +3,9 @@ import {
   Position,
   positionEqual,
   positionMove,
-  positionOnLine,
 } from "./position.ts";
 
-export type Item = Player | Wall | Ice | Wind;
+export type Item = Player | Wall | Ice | Wind | WarpPair | Goal;
 
 export type Player = {
   readonly type: "player";
@@ -32,33 +31,56 @@ export type Wind = {
   readonly direction: Direction;
 };
 
+export type WarpPair = {
+  readonly type: "warpPair";
+  readonly a: Position;
+  readonly b: Position;
+  readonly label: string;
+};
+
+export type Goal = {
+  readonly type: "goal";
+  readonly position: Position;
+};
+
 export const move = (
   items: ReadonlyArray<Item>,
   direction: Direction,
 ): ReadonlyArray<Item> => {
+  const warpPoints = createWarpPoints(items);
   const newItems = [...items];
   for (const [playerIndex, player] of items.entries()) {
     if (player.type !== "player") continue;
-    const movedPlayer = walkPlayer(newItems, direction, player);
+    const movedPlayer = walkPlayer({
+      items: newItems,
+      direction,
+      player,
+      warpPoints,
+    });
     newItems[playerIndex] = movedPlayer;
   }
   return newItems;
 };
 
 const walkPlayer = (
-  items: ReadonlyArray<Item>,
-  direction: Direction,
-  player: Player,
+  { items, direction, player, warpPoints }: {
+    items: ReadonlyArray<Item>;
+    direction: Direction;
+    player: Player;
+    warpPoints: ReadonlyArray<WarpPoint>;
+  },
 ): Player => {
   if (checkWall(items, player.position, direction)) {
     return player;
   }
   let playerPosition = positionMove(player.position, direction);
   for (let i = 0; i < 999; i++) {
-    const windDirection = isInWind(
-      { items, position: playerPosition },
+    const matchedWarpPoint = warpPoints.find(({ from }) =>
+      positionEqual(from, playerPosition)
     );
-    console.log(windDirection);
+    if (matchedWarpPoint) {
+      return { type: "player", position: matchedWarpPoint.to };
+    }
     if (isOnIce(items, playerPosition)) {
       if (
         checkWall(
@@ -70,17 +92,6 @@ const walkPlayer = (
         return { type: "player", position: playerPosition };
       }
       playerPosition = positionMove(playerPosition, direction);
-    } else if (windDirection) {
-      if (
-        checkWall(
-          items,
-          playerPosition,
-          direction,
-        )
-      ) {
-        return { type: "player", position: playerPosition };
-      }
-      playerPosition = positionMove(playerPosition, windDirection);
     } else {
       return { type: "player", position: playerPosition };
     }
@@ -97,55 +108,48 @@ const isOnIce = (
   );
 };
 
-// 処理を修正
-const isInWind = ({ items, position }: {
-  readonly items: ReadonlyArray<Item>;
-  readonly position: Position;
-}): Direction | undefined => {
-  for (const item of items) {
-    if (item.type !== "wind") continue;
-    if (
-      isInWindInWind({
-        items,
-        playerPosition: position,
-        windPosition: item.position,
-        windDirection: item.direction,
-      })
-    ) {
-      return item.direction;
-    }
-  }
+type WarpPoint = {
+  readonly from: Position;
+  readonly to: Position;
 };
 
-const isInWindInWind = (
-  { items, playerPosition, windPosition, windDirection }: {
-    readonly items: ReadonlyArray<Item>;
-    readonly playerPosition: Position;
-    readonly windPosition: Position;
-    readonly windDirection: Direction;
-  },
-): boolean => {
-  if (windPosition.floor !== playerPosition.floor) {
-    return false;
-  }
-  if (
-    !positionOnLine({
-      aPosition: windPosition,
-      aDirection: windDirection,
-      bPosition: playerPosition,
-    })
-  ) {
-    return false;
-  }
+const createWarpPoints = (
+  items: ReadonlyArray<Item>,
+): ReadonlyArray<WarpPoint> =>
+  items.flatMap((item) => {
+    switch (item.type) {
+      case "player":
+      case "wall":
+      case "ice":
+      case "goal":
+        return [];
+      case "wind":
+        return createWindWarpPoints({
+          items,
+          windPosition: item.position,
+          windDirection: item.direction,
+        });
+      case "warpPair":
+        return [{ from: item.a, to: item.b }, { from: item.b, to: item.a }];
+    }
+  });
+
+const createWindWarpPoints = ({ items, windDirection, windPosition }: {
+  readonly items: ReadonlyArray<Item>;
+  readonly windPosition: Position;
+  readonly windDirection: Direction;
+}): ReadonlyArray<WarpPoint> => {
   let cursor: Position = windPosition;
+  const startPositions: Position[] = [];
   for (let i = 0; i < 99; i++) {
     if (checkWall(items, cursor, windDirection)) {
-      return false;
+      return startPositions.map((startPosition) => ({
+        from: startPosition,
+        to: cursor,
+      }));
     }
     cursor = positionMove(cursor, windDirection);
-    if (positionEqual(cursor, playerPosition)) {
-      return true;
-    }
+    startPositions.push(cursor);
   }
   throw new Error("風の計算で無限ループ");
 };
@@ -173,3 +177,10 @@ const checkWall = (
   }
   return false;
 };
+
+export const isGoal = (items: ReadonlyArray<Item>): boolean =>
+  items.filter((item) => item.type === "player").every((player) =>
+    items.some((item) =>
+      item.type === "goal" && positionEqual(item.position, player.position)
+    )
+  );

@@ -30,10 +30,14 @@ export const Grid = (
             items={items.filter((item) => {
               if (item.type === "wall") {
                 return item.floor === floorIndex;
-              } else {
-                return item.position.floor === floorIndex;
               }
+              if (item.type === "warpPair") {
+                return item.a.floor === floorIndex ||
+                  item.b.floor === floorIndex;
+              }
+              return item.position.floor === floorIndex;
             })}
+            floor={floorIndex}
           />
         </g>
       ))}
@@ -42,10 +46,11 @@ export const Grid = (
 };
 
 export const Floor = (
-  { items, width, height }: {
+  { items, width, height, floor }: {
     readonly items: ReadonlyArray<Item>;
     readonly width: number;
     readonly height: number;
+    readonly floor: number;
   },
 ) => {
   return (
@@ -77,12 +82,20 @@ export const Floor = (
         ))}
       </g>
       <line x1="0" y1="80" x2="100" y2="20" stroke="black" />
-      {items.map((item, index) => <Item key={index} item={item} />)}
+      {items.map((item, index) => (
+        <Item
+          key={index}
+          item={item}
+          floor={floor}
+        />
+      ))}
     </>
   );
 };
 
-const Item: FC<{ readonly item: Item }> = ({ item }) => {
+const Item: FC<{ readonly item: Item; readonly floor: number }> = (
+  { item, floor },
+) => {
   switch (item.type) {
     case "player":
       return (
@@ -128,6 +141,48 @@ const Item: FC<{ readonly item: Item }> = ({ item }) => {
         </g>
       );
     }
+    case "warpPair": {
+      return (
+        <>
+          {item.a.floor === floor && (
+            <>
+              <text
+                x={item.a.x + 0.5}
+                y={item.a.y + 0.5}
+                textAnchor="middle"
+                alignmentBaseline="central"
+                style={{ fontSize: "1px" }}
+              >
+                {item.label}
+              </text>
+            </>
+          )}
+          {item.b.floor === floor && (
+            <>
+              <text
+                x={item.b.x + 0.5}
+                y={item.b.y + 0.5}
+                textAnchor="middle"
+                alignmentBaseline="central"
+                style={{ fontSize: "1px" }}
+              >
+                {item.label}
+              </text>
+            </>
+          )}
+        </>
+      );
+    }
+    case "goal":
+      return (
+        <rect
+          x={item.position.x + 0.1}
+          y={item.position.y + 0.1}
+          width={0.8}
+          height={0.8}
+          fill="green"
+        />
+      );
   }
 };
 
