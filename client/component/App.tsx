@@ -7,17 +7,21 @@ const initialItems: ReadonlyArray<Item> = [
   // floor 0
   ...Array.from({ length: 5 }).flatMap((_, x) =>
     Array.from({ length: 5 }).map((_, y): Item => ({
-      floor: 0,
       type: "ice",
-      x: 1 + x,
-      y: 1 + y,
+      position: {
+        floor: 0,
+        x: 1 + x,
+        y: 1 + y,
+      },
     }))
   ),
   {
-    floor: 0,
     type: "player",
-    x: 1,
-    y: 1,
+    position: {
+      floor: 0,
+      x: 1,
+      y: 1,
+    },
   },
   {
     floor: 0,
@@ -203,10 +207,12 @@ const initialItems: ReadonlyArray<Item> = [
   },
   // floor 1
   {
-    floor: 1,
     type: "player",
-    x: 1,
-    y: 1,
+    position: {
+      floor: 1,
+      x: 1,
+      y: 1,
+    },
   },
   {
     floor: 1,
@@ -268,13 +274,6 @@ const initialItems: ReadonlyArray<Item> = [
     floor: 1,
     type: "wall",
     x: 4,
-    y: 2,
-    direction: "vertical",
-  },
-  {
-    floor: 1,
-    type: "wall",
-    x: 6,
     y: 2,
     direction: "vertical",
   },
@@ -375,13 +374,43 @@ const initialItems: ReadonlyArray<Item> = [
     x: 5,
     y: 6,
     direction: "horizontal",
+  },
+  {
+    type: "wind",
+    position: { floor: 1, x: 3, y: 0 },
+    direction: "down",
+  },
+  {
+    type: "wind",
+    position: { floor: 1, x: 6, y: 2 },
+    direction: "left",
+  },
+  {
+    type: "wind",
+    position: {
+      floor: 1,
+      x: 0,
+      y: 3,
+    },
+    direction: "right",
+  },
+  {
+    type: "wind",
+    position: {
+      floor: 1,
+      x: 0,
+      y: 5,
+    },
+    direction: "right",
   },
   // floor 2
   {
-    floor: 2,
     type: "player",
-    x: 1,
-    y: 1,
+    position: {
+      floor: 2,
+      x: 1,
+      y: 1,
+    },
   },
   {
     floor: 2,

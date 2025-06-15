@@ -1,5 +1,5 @@
-import { FC, JSX } from "hono/jsx";
-import type { Item } from "../grid.ts";
+import { FC } from "hono/jsx";
+import type { Item, Wall } from "../grid.ts";
 
 const floorGap = 2;
 
@@ -27,7 +27,13 @@ export const Grid = (
           <Floor
             width={width}
             height={height}
-            items={items.filter((item) => item.floor === floorIndex)}
+            items={items.filter((item) => {
+              if (item.type === "wall") {
+                return item.floor === floorIndex;
+              } else {
+                return item.position.floor === floorIndex;
+              }
+            })}
           />
         </g>
       ))}
@@ -79,38 +85,76 @@ export const Floor = (
 const Item: FC<{ readonly item: Item }> = ({ item }) => {
   switch (item.type) {
     case "player":
-      return <circle cx={item.x + 0.5} cy={item.y + 0.5} r={0.4} />;
+      return (
+        <circle cx={item.position.x + 0.5} cy={item.position.y + 0.5} r={0.4} />
+      );
     case "wall": {
-      switch (item.direction) {
-        case "horizontal":
-          return (
-            <line
-              x1={item.x}
-              y1={item.y}
-              x2={item.x + 1}
-              y2={item.y}
-              stroke="black"
-              strokeWidth={0.1}
-            />
-          );
-
-        case "vertical":
-          return (
-            <line
-              x1={item.x}
-              y1={item.y}
-              x2={item.x}
-              y2={item.y + 1}
-              stroke="black"
-              strokeWidth={0.1}
-            />
-          );
-      }
-      item.direction satisfies never;
-      break;
+      return <Wall wall={item} />;
     }
     case "ice": {
-      return <rect x={item.x} y={item.y} width={1} height={1} fill="skyblue" />;
+      return (
+        <rect
+          x={item.position.x}
+          y={item.position.y}
+          width={1}
+          height={1}
+          fill="skyblue"
+        />
+      );
     }
+    case "wind": {
+      return (
+        <g
+          transform={`translate(${item.position.x + 0.5}, ${
+            item.position.y + 0.5
+          })`}
+        >
+          <polygon
+            points={[
+              { x: -0.1, y: -0.4 },
+              { x: 0.1, y: -0.4 },
+              { x: 0.1, y: 0 },
+              { x: 0.3, y: 0 },
+              { x: 0, y: 0.4 },
+              { x: -0.3, y: 0 },
+              { x: -0.1, y: 0 },
+            ].map(({ x, y }) => `${x},${y}`)}
+            transform={`rotate(${
+              { down: 0, left: 90, up: 180, right: 270 }[item.direction]
+            })`}
+            stroke="black"
+            strokeWidth={0.1}
+          />
+        </g>
+      );
+    }
+  }
+};
+
+const Wall: FC<{ readonly wall: Wall }> = ({ wall }) => {
+  switch (wall.direction) {
+    case "horizontal":
+      return (
+        <line
+          x1={wall.x}
+          y1={wall.y}
+          x2={wall.x + 1}
+          y2={wall.y}
+          stroke="black"
+          strokeWidth={0.1}
+        />
+      );
+
+    case "vertical":
+      return (
+        <line
+          x1={wall.x}
+          y1={wall.y}
+          x2={wall.x}
+          y2={wall.y + 1}
+          stroke="black"
+          strokeWidth={0.1}
+        />
+      );
   }
 };

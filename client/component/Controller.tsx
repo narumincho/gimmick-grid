@@ -1,5 +1,5 @@
 import { PropsWithChildren } from "hono/jsx";
-import { Direction } from "../grid.ts";
+import { Direction } from "../position.ts";
 
 export const Controller = ({ onMove, onReset }: {
   readonly onMove: (direction: Direction) => void;

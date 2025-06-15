@@ -1,10 +1,16 @@
-export type Item = Player | Wall | Ice;
+import {
+  Direction,
+  Position,
+  positionEqual,
+  positionMove,
+  positionOnLine,
+} from "./position.ts";
+
+export type Item = Player | Wall | Ice | Wind;
 
 export type Player = {
   readonly type: "player";
-  readonly x: number;
-  readonly y: number;
-  readonly floor: number;
+  readonly position: Position;
 };
 
 export type Wall = {
@@ -17,12 +23,14 @@ export type Wall = {
 
 export type Ice = {
   readonly type: "ice";
-  readonly x: number;
-  readonly y: number;
-  readonly floor: number;
+  readonly position: Position;
 };
 
-export type Direction = "up" | "down" | "left" | "right";
+export type Wind = {
+  readonly type: "wind";
+  readonly position: Position;
+  readonly direction: Direction;
+};
 
 export const move = (
   items: ReadonlyArray<Item>,
@@ -42,89 +50,125 @@ const walkPlayer = (
   direction: Direction,
   player: Player,
 ): Player => {
-  if (checkWall(items, player.x, player.y, player.floor, direction)) {
+  if (checkWall(items, player.position, direction)) {
     return player;
   }
-  let movedPlayer = movePlayer(direction, player);
+  let playerPosition = positionMove(player.position, direction);
   for (let i = 0; i < 999; i++) {
-    if (
-      isOnIce({
-        items,
-        x: movedPlayer.x,
-        y: movedPlayer.y,
-        floor: movedPlayer.floor,
-      })
-    ) {
+    const windDirection = isInWind(
+      { items, position: playerPosition },
+    );
+    console.log(windDirection);
+    if (isOnIce(items, playerPosition)) {
       if (
         checkWall(
           items,
-          movedPlayer.x,
-          movedPlayer.y,
-          movedPlayer.floor,
+          playerPosition,
           direction,
         )
       ) {
-        return movedPlayer;
+        return { type: "player", position: playerPosition };
       }
-      movedPlayer = movePlayer(direction, movedPlayer);
+      playerPosition = positionMove(playerPosition, direction);
+    } else if (windDirection) {
+      if (
+        checkWall(
+          items,
+          playerPosition,
+          direction,
+        )
+      ) {
+        return { type: "player", position: playerPosition };
+      }
+      playerPosition = positionMove(playerPosition, windDirection);
     } else {
-      return movedPlayer;
+      return { type: "player", position: playerPosition };
     }
   }
   throw new Error("無限ループエラー");
 };
 
 const isOnIce = (
-  { items, x, y, floor }: {
-    items: ReadonlyArray<Item>;
-    x: number;
-    y: number;
-    floor: number;
-  },
+  items: ReadonlyArray<Item>,
+  position: Position,
 ): boolean => {
   return items.some((item) =>
-    item.type === "ice" && item.x === x && item.y === y && item.floor === floor
+    item.type === "ice" && positionEqual(item.position, position)
   );
 };
 
-const movePlayer = (
-  direction: Direction,
-  player: Player,
-): Player => {
-  switch (direction) {
-    case "up":
-      return { ...player, y: player.y - 1 };
-    case "down":
-      return { ...player, y: player.y + 1 };
-    case "left":
-      return { ...player, x: player.x - 1 };
-    case "right":
-      return { ...player, x: player.x + 1 };
+// 処理を修正
+const isInWind = ({ items, position }: {
+  readonly items: ReadonlyArray<Item>;
+  readonly position: Position;
+}): Direction | undefined => {
+  for (const item of items) {
+    if (item.type !== "wind") continue;
+    if (
+      isInWindInWind({
+        items,
+        playerPosition: position,
+        windPosition: item.position,
+        windDirection: item.direction,
+      })
+    ) {
+      return item.direction;
+    }
   }
+};
+
+const isInWindInWind = (
+  { items, playerPosition, windPosition, windDirection }: {
+    readonly items: ReadonlyArray<Item>;
+    readonly playerPosition: Position;
+    readonly windPosition: Position;
+    readonly windDirection: Direction;
+  },
+): boolean => {
+  if (windPosition.floor !== playerPosition.floor) {
+    return false;
+  }
+  if (
+    !positionOnLine({
+      aPosition: windPosition,
+      aDirection: windDirection,
+      bPosition: playerPosition,
+    })
+  ) {
+    return false;
+  }
+  let cursor: Position = windPosition;
+  for (let i = 0; i < 99; i++) {
+    if (checkWall(items, cursor, windDirection)) {
+      return false;
+    }
+    cursor = positionMove(cursor, windDirection);
+    if (positionEqual(cursor, playerPosition)) {
+      return true;
+    }
+  }
+  throw new Error("風の計算で無限ループ");
 };
 
 const checkWall = (
   items: ReadonlyArray<Item>,
-  x: number,
-  y: number,
-  floor: number,
+  position: Position,
   direction: Direction,
 ): boolean => {
   for (const item of items) {
     if (item.type !== "wall") continue;
-    if (item.floor !== floor) continue;
+    if (item.floor !== position.floor) continue;
 
     switch (item.direction) {
       case "horizontal":
-        if (item.x !== x) continue;
-
-        if (direction === "up" && item.y === y) return true;
-        if (direction === "down" && item.y === y + 1) return true;
+        if (item.x !== position.x) continue;
+        if (direction === "up" && item.y === position.y) return true;
+        if (direction === "down" && item.y === position.y + 1) return true;
         break;
       case "vertical":
-        if (item.y !== y) continue;
-        if (direction === "left" && item.x === x) return true;
-        if (direction === "right" && item.x === x + 1) return true;
+        if (item.y !== position.y) continue;
+        if (direction === "left" && item.x === position.x) return true;
+        if (direction === "right" && item.x === position.x + 1) return true;
     }
   }
   return false;
