@@ -1,7 +1,9 @@
 import { Grid } from "./Grid.tsx";
-import { type Item, move } from "../grid.ts";
+import { isGoal, type Item, move } from "../grid.ts";
 import { Controller } from "./Controller.tsx";
 import { useState } from "hono/jsx";
+import { Direction } from "../position.ts";
+import { StepsView } from "./StepsView.tsx";
 
 const initialItems: ReadonlyArray<Item> = [
   // floor 0
@@ -591,7 +593,12 @@ const initialItems: ReadonlyArray<Item> = [
 ];
 
 export const App = () => {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState<ReadonlyArray<Item>>(initialItems);
+  const [steps, setSteps] = useState<ReadonlyArray<Direction>>([]);
+  const [okStepsList, setOkStepsList] = useState<
+    ReadonlyArray<ReadonlyArray<Direction>>
+  >([]);
+
   return (
     <div
       style={{
@@ -602,14 +609,33 @@ export const App = () => {
       }}
     >
       <Grid width={7} height={6} floorSize={3} items={items} />
-      <Controller
-        onMove={(direction) => {
-          setItems((items) => move(items, direction));
-        }}
-        onReset={() => {
-          setItems(initialItems);
-        }}
-      />
+      <div>
+        <Controller
+          onMove={(direction) => {
+            const newSteps = [...steps, direction];
+            const moved = move(items, direction);
+            if (steps.length === 9) {
+              if (isGoal(moved)) {
+                setOkStepsList((prev) => [...prev, newSteps]);
+              }
+              setSteps([]);
+              setItems(initialItems);
+            } else {
+              setSteps(newSteps);
+              setItems(moved);
+            }
+          }}
+          onReset={() => {
+            setSteps([]);
+            setItems(initialItems);
+          }}
+        />
+        <StepsView steps={steps} />
+        <div style={{ borderBottom: "solid 1px black" }} />
+        {okStepsList.map((okSteps, index) => (
+          <StepsView key={index} steps={okSteps} />
+        ))}
+      </div>
     </div>
   );
 };
