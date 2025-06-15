@@ -1,5 +1,7 @@
 import { Grid } from "./Grid.tsx";
-import type { Item } from "../grid.ts";
+import { type Item, move } from "../grid.ts";
+import { Controller } from "./Controller.tsx";
+import { useState } from "hono/jsx";
 
 const initialItems: ReadonlyArray<Item> = [
   // floor 0
@@ -516,9 +518,25 @@ const initialItems: ReadonlyArray<Item> = [
 ];
 
 export const App = () => {
+  const [items, setItems] = useState(initialItems);
   return (
-    <div style={{ height: "100%", padding: 16, boxSizing: "border-box" }}>
-      <Grid width={7} height={6} floorSize={3} items={initialItems} />
+    <div
+      style={{
+        height: "100%",
+        padding: 16,
+        boxSizing: "border-box",
+        display: "flex",
+      }}
+    >
+      <Grid width={7} height={6} floorSize={3} items={items} />
+      <Controller
+        onMove={(direction) => {
+          setItems((items) => move(items, direction));
+        }}
+        onReset={() => {
+          setItems(initialItems);
+        }}
+      />
     </div>
   );
 };
