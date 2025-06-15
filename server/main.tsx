@@ -6,12 +6,12 @@ const app = new Hono();
 
 app.get("/", (c) => {
   return c.html(
-    <html>
+    <html style={{ height: "100%" }}>
       <head>
         <title>gimmick grid</title>
         <script type="module" src={`/${dist.clientCodeHash}`} />
       </head>
-      <body style={{ margin: 0, display: "grid", justifyContent: "center" }}>
+      <body style={{ margin: 0, height: "100%" }}>
         <App />
       </body>
     </html>,

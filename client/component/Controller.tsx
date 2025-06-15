@@ -1,9 +1,10 @@
 import { PropsWithChildren } from "hono/jsx";
 import { Direction } from "../position.ts";
 
-export const Controller = ({ onMove, onReset }: {
+export const Controller = ({ onMove, onReset, onStart }: {
   readonly onMove: (direction: Direction) => void;
   readonly onReset: () => void;
+  readonly onStart: () => void;
 }) => {
   return (
     <div
@@ -39,11 +40,8 @@ export const Controller = ({ onMove, onReset }: {
       >
         ↓
       </Button>
-      <Button
-        onClick={onReset}
-      >
-        Reset
-      </Button>
+      <Button onClick={onReset}>Reset</Button>
+      <Button onClick={onStart}>総当たりの裏技</Button>
     </div>
   );
 };

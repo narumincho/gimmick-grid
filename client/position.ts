@@ -45,3 +45,34 @@ export const positionOnLine = (
       return aPosition.x > bPosition.x && aPosition.y === bPosition.y;
   }
 };
+
+export const allDirections: ReadonlyArray<Direction> = [
+  "up",
+  "right",
+  "down",
+  "left",
+];
+
+const directionsLength = allDirections.length;
+
+export const stepNumberToDirections = (
+  stepNumber: number,
+): ReadonlyArray<Direction> => {
+  const directions: Direction[] = [];
+  let num = stepNumber;
+  for (let i = 0; i < 9; i++) {
+    directions.push(allDirections[num % directionsLength]!);
+    num = Math.floor(num / directionsLength);
+  }
+  return directions;
+};
+
+export const directionsToStepNumber = (
+  directions: ReadonlyArray<Direction>,
+): number => {
+  let num = 0;
+  for (const direction of directions.toReversed()) {
+    num = num * directionsLength + allDirections.indexOf(direction);
+  }
+  return num;
+};

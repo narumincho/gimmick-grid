@@ -1,8 +1,12 @@
 import { Grid } from "./Grid.tsx";
 import { isGoal, type Item, move } from "../grid.ts";
 import { Controller } from "./Controller.tsx";
-import { useState } from "hono/jsx";
-import { Direction } from "../position.ts";
+import { useEffect, useState } from "hono/jsx";
+import {
+  Direction,
+  directionsToStepNumber,
+  stepNumberToDirections,
+} from "../position.ts";
 import { StepsView } from "./StepsView.tsx";
 
 const initialItems: ReadonlyArray<Item> = [
@@ -592,12 +596,68 @@ const initialItems: ReadonlyArray<Item> = [
   },
 ];
 
+const applySteps = (stepId: number) => {
+  let items = initialItems;
+  for (const direction of stepNumberToDirections(stepId)) {
+    items = move(items, direction);
+  }
+  return items;
+};
+
 export const App = () => {
   const [items, setItems] = useState<ReadonlyArray<Item>>(initialItems);
   const [steps, setSteps] = useState<ReadonlyArray<Direction>>([]);
-  const [okStepsList, setOkStepsList] = useState<
-    ReadonlyArray<ReadonlyArray<Direction>>
-  >([]);
+  const [stepsNumber, setStepsNumber] = useState<number | undefined>(undefined);
+  const [okStepsNumberSet, setOkStepsNumberSet] = useState<ReadonlySet<number>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    if (stepsNumber === undefined) return;
+
+    const tick = () => {
+      if (4 ** 9 < stepsNumber) {
+        console.log("完了!", new Date());
+        setStepsNumber(undefined);
+        return;
+      }
+      const right = stepsNumber + 1;
+      const down = stepsNumber + 2;
+
+      {
+        const moved = applySteps(right);
+        setSteps(stepNumberToDirections(right));
+        setItems(moved);
+        if (isGoal(moved)) {
+          console.log(right);
+          setOkStepsNumberSet((prev) => new Set(prev).add(right));
+        }
+      }
+
+      {
+        setSteps(stepNumberToDirections(down));
+        const moved = applySteps(down);
+        setItems(moved);
+        if (isGoal(moved)) {
+          console.log(down);
+
+          setOkStepsNumberSet((prev) => new Set(prev).add(down));
+        }
+      }
+
+      setStepsNumber(stepsNumber + 4);
+    };
+
+    const f = () => {
+      return requestAnimationFrame(tick);
+    };
+
+    const id: number = f();
+
+    return () => {
+      cancelAnimationFrame(id);
+    };
+  }, [stepsNumber === undefined, stepsNumber]);
 
   return (
     <div
@@ -616,7 +676,9 @@ export const App = () => {
             const moved = move(items, direction);
             if (steps.length === 9) {
               if (isGoal(moved)) {
-                setOkStepsList((prev) => [...prev, newSteps]);
+                setOkStepsNumberSet((prev) =>
+                  new Set(prev).add(directionsToStepNumber(newSteps))
+                );
               }
               setSteps([]);
               setItems(initialItems);
@@ -629,11 +691,22 @@ export const App = () => {
             setSteps([]);
             setItems(initialItems);
           }}
+          onStart={() => {
+            console.log("開始!", new Date());
+            setStepsNumber(0);
+            // setStepsNumber(4 ** 8 * 2);
+          }}
         />
-        <StepsView steps={steps} />
+
+        {stepsNumber === undefined
+          ? undefined
+          : <StepsView steps={stepNumberToDirections(stepsNumber)} />}
         <div style={{ borderBottom: "solid 1px black" }} />
-        {okStepsList.map((okSteps, index) => (
-          <StepsView key={index} steps={okSteps} />
+        {[...okStepsNumberSet].map((okStepsNumber, index) => (
+          <StepsView
+            key={index}
+            steps={stepNumberToDirections(okStepsNumber)}
+          />
         ))}
       </div>
     </div>
